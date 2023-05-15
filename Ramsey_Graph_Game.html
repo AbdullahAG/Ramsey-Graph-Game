@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ramsey Graph Game</title>
+    <style>
+	body{
+	padding: 2%;
+	}
+      .container {
+        display: flex;
+      }
+      .left {
+        flex: 1;
+        padding: 50px;
+      }
+      .right {
+        flex: 1.5;
+        padding: 10px;
+		padding-left: 150px;
+      }
+.stat{width: 150px;
+  border: 1px solid black; 
+	  }
+	  
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="left">
+        <h1>Welcome to the Ramsey Graph Game!</h1>
+        <p>In this game, two players take turns coloring edges in a randomly generated graph. The objective is to be the first to create a monochromatic subgraph of a specified size, known as a clique, before the opponent achieves this goal. The size of the clique and the number of vertices in the graph can be determined by the players.</p>
+        <h2>Rules</h2>
+        <p>The Ramsey Graph Game is a two-player game played on a complete graph with n vertices. Each player takes turns coloring an uncolored edge of the graph in their own color. The first player colors edges with red, and the second player colors edges with blue.</p>
+        <p>The game ends when either:</p>
+        <ol>
+          <li>One player creates a monochromatic clique of the specified size, in which case they win.</li>
+          <li>All edges are colored and no player has created a monochromatic triangle, in which case the game is a tie.</li>
+        </ol>
+        <p>It is important to note that the winning clique size and the number of vertices in the graph can be chosen by the players at the beginning of the game. This allows for flexibility and customization in gameplay. Enjoy playing and have fun exploring different strategies!</p>
+
+        
+        </ul>
+      </div>
+      <div class="right">
+        <label for="vertices">Number of Vertices:</label>
+        <input type="number" id="vertices" value="5" min="3" />
+		<label for="size" >Size of Clique:</label>
+		<input type="number" id="size" value="3" min="1" />
+
+        <button id="reset">Reset</button>
+        <button id="randomMove">Random Move</button> <!-- Added button for random move -->
+        <br />
+        <canvas id="canvas" width="700" height="700"></canvas>
+        <p id="status" class="stat"></p>
+      </div>
+    </div>
+	
+	<script>
+
+	  const sizeInput = document.getElementById("size");
+	  let k = parseInt(sizeInput.value);
+      const canvas = document.getElementById("canvas");
+      const context = canvas.getContext("2d");
+      const status = document.getElementById("status");
+      const verticesInput = document.getElementById("vertices");
+      const resetButton = document.getElementById("reset");
+
+      let n = parseInt(verticesInput.value); // Number of vertices
+      let graph = generateGraph(n); // Initialize random graph
+      let currentPlayer = 1;
+	  status.textContent = "Player 1's turn"
+			status.style.backgroundColor= 'red';
+			status.style.color= 'white';
+		  
+      verticesInput.addEventListener("input", handleVerticesInput);
+      resetButton.addEventListener("click", handleResetButtonClick);
+      canvas.addEventListener("click", handleCanvasClick);
+	const randomMoveButton = document.getElementById("randomMove");
+randomMoveButton.addEventListener("click", handleRandomMoveClick);
+      drawGraph();
+
+
+	sizeInput.addEventListener("input", handleSizeInput);
+function handleRandomMoveClick() {
+  console.log("Clicked on random move button");
+
+  const availableEdges = [];
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (graph[i][j] === 0) {
+        availableEdges.push([i, j]);
+      }
+    }
+  }
+
+  if (availableEdges.length === 0) {
+    console.log("No available edges for random move");
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * availableEdges.length);
+  const randomEdge = availableEdges[randomIndex];
+  const [i, j] = randomEdge;
+
+  console.log("Random move:", randomEdge);
+
+  graph[i][j] = currentPlayer;
+  drawGraph();
+
+  checkWinner();
+}
+	function handleSizeInput(event) {
+	  const value = parseInt(event.target.value);
+	  if (!isNaN(value)) {
+		k = value;
+		handleResetButtonClick();
+	  }
+	}
+
+
+      function generateGraph(n) {
+        const graph = Array(n)
+          .fill()
+          .map(() => Array(n).fill(0)); // Initialize empty graph
+        const numEdges = Math.floor((n * (n - 1)) / 4); // Number of edges in a complete graph
+        const edgesToColor = Math.floor(numEdges / 2); // Number of edges to color
+        const edges = [];
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            edges.push([i, j]);
+          }
+        }
+        shuffle(edges); // Randomize edge order
+        for (let i = 0; i < n; i++) {
+		  for (let j = i + 1; j < n; j++) {
+			graph[i][j] = 0;
+			graph[j][i] = 0;
+		  }
+		}
+        return graph;
+      }
+
+      function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      function handleVerticesInput(event) {
+        const value = parseInt(event.target.value);
+        if (!isNaN(value)) {
+          n = value;
+          handleResetButtonClick();
+        }
+      }
+
+      function handleResetButtonClick() {
+        graph = generateGraph(n);
+        currentPlayer = 1;
+	  status.textContent = "Player 1's turn"
+			status.style.backgroundColor= 'red';
+			status.style.color= 'white';
+        drawGraph();
+      }
+	  
+      function drawGraph() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        const radius = Math.min(canvas.width, canvas.height) / (7 * n);
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Draw vertices
+        context.fillStyle = "black";
+        for (let i = 0; i < n; i++) {
+          const angle = (2 * Math.PI * i) / n;
+          const x = centerX + Math.cos(angle) * canvas.width * 0.45;
+          const y = centerY + Math.sin(angle) * canvas.height * 0.45;
+          context.beginPath();
+          context.arc(x, y, radius, 0, 2 * Math.PI);
+          context.fill();
+        }
+
+        // Draw edges
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            if (graph[i][j] === 1) {
+              // Player 1 colored this edge
+              context.strokeStyle = "red";
+              context.lineWidth = 12;
+              drawEdge(i, j);
+            } else if (graph[i][j] === 2) {
+              // Player 2 colored this edge
+              context.strokeStyle = "blue";
+              context.lineWidth = 12;
+              drawEdge(i, j);
+            } else {
+              // Edge is uncolored
+              context.strokeStyle = "black";
+              context.lineWidth = 10;
+              drawEdge(i, j);
+            }
+          }
+        }
+      }
+
+      function drawEdge(i, j) {
+        const radius = Math.min(canvas.width, canvas.height) / (2 * n);
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const angleI = (2 * Math.PI * i) / n;
+        const angleJ = (2 * Math.PI * j) / n;
+        const x1 = centerX + Math.cos(angleI) * canvas.width * 0.45;
+        const y1 = centerY + Math.sin(angleI) * canvas.height * 0.45;
+        const x2 = centerX + Math.cos(angleJ) * canvas.width * 0.45;
+        const y2 = centerY + Math.sin(angleJ) * canvas.height * 0.45;
+        context.beginPath();
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+        context.stroke();
+      }
+
+
+
+function handleCanvasClick(event) {
+  console.log("Clicked on canvas");
+
+  const rect = canvas.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  const radius = Math.min(canvas.width, canvas.height) / (2 * n);
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (graph[i][j] === 0) {
+        // Edge is uncolored
+        const angleI = (2 * Math.PI * i) / n;
+        const angleJ = (2 * Math.PI * j) / n;
+        const x1 = centerX + Math.cos(angleI) * canvas.width * 0.45;
+        const y1 = centerY + Math.sin(angleI) * canvas.height * 0.45;
+        const x2 = centerX + Math.cos(angleJ) * canvas.width * 0.45;
+        const y2 = centerY + Math.sin(angleJ) * canvas.height * 0.45;
+        const distance = distanceToLineSegment(x, y, x1, y1, x2, y2);
+        if (distance <= 12) {
+          console.log("Valid move");
+
+          graph[i][j] = currentPlayer;
+
+          drawGraph();
+
+          checkWinner();
+          return;
+        }
+      }
+    }
+  }
+}
+
+function highlightClique() {
+  clique = highlight_set;
+  console.log("Winning clique:", clique)
+  const color = 'purple';
+  if (clique.length > 0) {
+    for (let i = 0; i < clique.length; i++) {
+      for (let j = i + 1; j < clique.length; j++) {
+        const u = clique[i];
+        const v = clique[j];
+        if (graph[u][v] === currentPlayer) {
+          context.strokeStyle = color;
+          context.lineWidth = 12;
+          drawEdge(u, v);
+        }
+      }
+    }
+  }
+}
+
+function checkWinner(){
+// Check for winner
+          const winner = getWinner();
+          console.log("Checking for winner", winner);
+          if (winner !== 0) {
+            status.textContent = `Player ${winner} wins!`;
+            alert(`Player ${winner} wins!`);
+			
+			// Highlight the winner set
+			console.log("after if and before highlight");
+			highlightClique();
+			console.log("after hilight");
+			
+            return;
+          } else if (isTie()) {
+            alert("It's a tie!");
+            return;
+          }
+
+          switchPlayer(); // switch player after a move
+          status.textContent = `Player ${currentPlayer}'s turn`;
+}
+
+// Returns the winner of the game or 0 if there's no winner yet.
+function getWinner() {
+  // Iterate through colors 1 and 2.
+  for (let color = 1; color <= 2; color++) {
+    // Check if there is a monochromatic clique of size k for the current color.
+    if (hasMonochromaticClique(k, color)) {
+      // If a clique is found, return the winning color.
+      return color;
+    }
+  }
+  // If no cliques are found, return 0 (no winner yet).
+  return 0;
+}
+
+let highlight_set;
+// Checks if there is a monochromatic clique of the specified size and color in the graph.
+function hasMonochromaticClique(cliqueSize, color) {
+  // Recursive function to search for a clique of the specified size and color.
+  function searchClique(vertices, start, size, currentClique) {
+    // If the desired clique size is reached, a clique is found.
+    if (size === 0) {
+	  highlight_set = currentClique;
+      return true;
+    }
+    // Iterate through the vertices, searching for potential clique members.
+    for (let i = start; i <= vertices.length - size; i++) {
+      // Check if the current vertex is connected to all vertices in the currentClique.
+      if (isConnectedToAll(currentClique, vertices[i], color)) {
+        // Add the vertex to the currentClique.
+        currentClique.push(vertices[i]);
+        // Continue searching for the remaining vertices to complete the clique.
+        if (searchClique(vertices, i + 1, size - 1, currentClique)) {
+          return true;
+        }
+        // Remove the vertex from the currentClique if it doesn't lead to a solution.
+        currentClique.pop();
+      }
+    }
+    // If no solution is found, return false.
+    return false;
+  }
+
+  // Check if a vertex is connected to all vertices in the given clique with the specified color.
+  function isConnectedToAll(clique, vertex, color) {
+    return clique.every((v) => graph[v][vertex] === color);
+  }
+
+  // Generate an array of vertex indices from 0 to n-1.
+  const vertices = Array.from({ length: n }, (_, i) => i);
+  // Call the searchClique function to search for a monochromatic clique of the specified size and color.
+  return searchClique(vertices, 0, cliqueSize, []);
+}
+
+
+
+
+function distanceToLineSegment(x, y, x1, y1, x2, y2) {
+  const length = Math.hypot(x2 - x1, y2 - y1);
+  if (length === 0) {
+    return Math.hypot(x - x1, y - y1);
+  }
+  const t = Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / length / length));
+  const projectionX = x1 + t * (x2 - x1);
+  const projectionY = y1 + t * (y2 - y1);
+  return Math.hypot(x - projectionX, y - projectionY);
+}
+
+
+
+
+
+
+function isTie() {
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (graph[i][j] === 0) {
+        // There is at least one uncolored edge
+        return false;
+      }
+    }
+  }
+  return true; // All edges are colored
+}
+
+
+  function switchPlayer() {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    status.innerText = `Player ${currentPlayer}'s turn`;
+	if (currentPlayer==1){
+			status.style.backgroundColor= 'red';
+			status.style.color= 'white';}
+		  else if (currentPlayer==2){
+			status.style.backgroundColor= 'blue';
+			status.style.color= 'white';}
+  }
+</script>
+  </body>
+</html>

@@ -326,11 +326,7 @@
       }
 
       function handleUndoButtonClick() {
-        if (previousMoves.length === 0) {
-          undoButton.disabled = true;
-          console.log("No moves to undo");
-          return;
-        }
+        console.log("Previous Move ", previousMoves)
         undoButton.disabled = false;
         const [i, j] = previousMoves.pop();
         graph[i][j] = 0;
@@ -339,7 +335,11 @@
         if (showWarnings) {
           getWarning();
         }
-        undoButton.disabled = true;
+        if (previousMoves.length === 0) {
+          undoButton.disabled = true;
+          console.log("No moves to undo");
+          return;
+        }
       }
 
       function handleLineWidthButtonClick(event) {

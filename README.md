@@ -1,5 +1,7 @@
 # Ramsey-Graph-Game
 
+Link to the game [Ramsey Game by Abdullah Alghofaili](https://abdullahag.github.io/Ramsey-Graph-Game/Ramsey_Graph_Game.html)
+
 ### Welcome to the Ramsey Graph Game!
 
 In this game, two players take turns coloring edges in a randomly generated graph. The goal is to create a monochromatic complete subgraph of a given size before the other player does.
